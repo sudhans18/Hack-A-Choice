@@ -1,0 +1,427 @@
+/*
+ * StudentDetail Page Styles - Preventive Intelligence System
+ * Black/White/Red theme only
+ */
+
+.student-detail {
+    min-height: 100vh;
+    background-color: #0B0B0B;
+}
+
+.student-detail__content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 88px 24px 48px;
+}
+
+/* Ethical Disclaimer */
+.student-detail__disclaimer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.student-detail__disclaimer svg {
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Header */
+.student-detail__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.student-detail__header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.student-detail__subtitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 4px 0 0;
+}
+
+/* Summary Grid */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.summary-card {
+    background-color: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.summary-card--main {
+    background: linear-gradient(135deg, rgba(20, 20, 20, 1), rgba(30, 30, 30, 1));
+}
+
+.summary-card--main.risk--high {
+    border-color: rgba(225, 6, 0, 0.5);
+}
+
+.summary-card--main.risk--moderate {
+    border-color: rgba(255, 107, 102, 0.4);
+}
+
+.summary-card__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+}
+
+.summary-card__value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #FFFFFF;
+}
+
+.summary-card--main.risk--high .summary-card__value {
+    color: #E10600;
+}
+
+.summary-card--main.risk--moderate .summary-card__value {
+    color: #FF6B66;
+}
+
+.summary-card__score {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 4px;
+}
+
+/* Preventive Signal Panel */
+.preventive-signal-panel {
+    background-color: rgba(225, 6, 0, 0.04);
+    border: 1px solid rgba(225, 6, 0, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.preventive-signal-panel__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.preventive-signal-panel__header h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.collapse-badge.large {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+}
+
+/* Signal Explanation */
+.signal-explanation {
+    margin-bottom: 20px;
+}
+
+.signal-explanation p {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+}
+
+/* Signal Drivers */
+.signal-drivers {
+    margin-bottom: 24px;
+}
+
+.signal-drivers h4 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 12px;
+}
+
+.signal-drivers ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.signal-drivers li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.signal-drivers li svg {
+    color: #E10600;
+    flex-shrink: 0;
+}
+
+/* Signal Score Bar */
+.signal-score-bar {
+    margin-top: 16px;
+}
+
+.signal-score-bar__track {
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.signal-score-bar__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.signal-score-bar__fill.collapse--elevated {
+    background: linear-gradient(90deg, rgba(225, 6, 0, 0.6), #E10600);
+}
+
+.signal-score-bar__fill.collapse--watch {
+    background: linear-gradient(90deg, rgba(255, 160, 130, 0.4), #FFA082);
+}
+
+.signal-score-bar__fill.collapse--low {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.signal-score-bar__labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Collapse Badge */
+.collapse-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+.collapse-badge.collapse--elevated {
+    background-color: rgba(225, 6, 0, 0.2);
+    color: #E10600;
+    border: 1px solid rgba(225, 6, 0, 0.4);
+}
+
+.collapse-badge.collapse--watch {
+    background-color: rgba(255, 160, 130, 0.15);
+    color: #FFA082;
+    border: 1px solid rgba(255, 160, 130, 0.3);
+}
+
+.collapse-badge.collapse--low {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Explainability Panel */
+.explainability-panel {
+    background-color: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.explainability-panel__header {
+    margin-bottom: 20px;
+}
+
+.explainability-panel__header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0 0 4px;
+}
+
+.explainability-panel__header p {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+.explainability-panel__chart {
+    height: 200px;
+    margin-bottom: 16px;
+}
+
+.explainability-panel__legend {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+.legend-color--red {
+    background-color: #E10600;
+}
+
+.legend-color--white {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Indicators Panel */
+.indicators-panel {
+    background-color: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.indicators-panel h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0 0 16px;
+}
+
+.indicators-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.indicator-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.indicator-item svg {
+    color: #E10600;
+    flex-shrink: 0;
+}
+
+/* Features Panel */
+.features-panel {
+    background-color: #141414;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.features-panel h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    margin: 0 0 16px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.feature-item {
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+}
+
+.feature-label {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 6px;
+}
+
+.feature-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+
+/* Error State */
+.student-detail__error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    text-align: center;
+}
+
+.student-detail__error p {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 20px;
+}
+
+/* Footer */
+.student-detail__footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

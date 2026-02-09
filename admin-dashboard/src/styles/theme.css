@@ -1,0 +1,328 @@
+/*
+ * COGNIS Enterprise Theme
+ * 
+ * Global CSS Variables & Design System
+ * Color Palette: Black / Red / White ONLY
+ */
+
+:root {
+    /* === PRIMARY COLORS === */
+    --color-black: #0B0B0B;
+    --color-black-light: #141414;
+    --color-black-lighter: #1C1C1C;
+    --color-black-surface: #242424;
+
+    --color-red: #E10600;
+    --color-red-dark: #B80500;
+    --color-red-light: #FF1A14;
+    --color-red-muted: rgba(225, 6, 0, 0.15);
+
+    --color-white: #FFFFFF;
+    --color-white-muted: rgba(255, 255, 255, 0.87);
+    --color-white-secondary: rgba(255, 255, 255, 0.6);
+    --color-white-tertiary: rgba(255, 255, 255, 0.38);
+    --color-white-border: rgba(255, 255, 255, 0.12);
+    --color-white-hover: rgba(255, 255, 255, 0.05);
+
+    /* === RISK LEVELS (Red intensity scale) === */
+    --risk-high: #E10600;
+    --risk-high-bg: rgba(225, 6, 0, 0.15);
+    --risk-moderate: #FF6B66;
+    --risk-moderate-bg: rgba(255, 107, 102, 0.15);
+    --risk-low: rgba(255, 255, 255, 0.6);
+    --risk-low-bg: rgba(255, 255, 255, 0.08);
+
+    /* === TYPOGRAPHY === */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-xs: 0.6875rem;
+    /* 11px */
+    --font-size-sm: 0.75rem;
+    /* 12px */
+    --font-size-base: 0.875rem;
+    /* 14px */
+    --font-size-md: 1rem;
+    /* 16px */
+    --font-size-lg: 1.125rem;
+    /* 18px */
+    --font-size-xl: 1.5rem;
+    /* 24px */
+    --font-size-2xl: 2rem;
+    /* 32px */
+
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* === SPACING === */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+
+    /* === BORDERS === */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-width: 1px;
+
+    /* === SHADOWS (minimal) === */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+    /* === TRANSITIONS === */
+    --transition-fast: 150ms ease;
+    --transition-normal: 200ms ease;
+
+    /* === LAYOUT === */
+    --navbar-height: 64px;
+    --content-max-width: 1400px;
+}
+
+/* === GLOBAL RESET === */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    color: var(--color-white-muted);
+    background-color: var(--color-black);
+    min-height: 100vh;
+}
+
+/* === TYPOGRAPHY === */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--color-white);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: var(--font-size-2xl);
+}
+
+h2 {
+    font-size: var(--font-size-xl);
+}
+
+h3 {
+    font-size: var(--font-size-lg);
+}
+
+h4 {
+    font-size: var(--font-size-md);
+}
+
+p {
+    color: var(--color-white-secondary);
+}
+
+a {
+    color: var(--color-red);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+a:hover {
+    color: var(--color-red-light);
+}
+
+/* === BUTTON SYSTEM === */
+
+/* Primary Button - Red background, white text */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 24px;
+    background-color: var(--color-red);
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: var(--color-white);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-red-dark);
+}
+
+.btn-primary:active {
+    background-color: #900400;
+}
+
+.btn-primary:disabled {
+    background-color: var(--color-black-surface);
+    color: var(--color-white-tertiary);
+    cursor: not-allowed;
+}
+
+/* Secondary Button - Transparent with red border */
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: 12px 24px;
+    background-color: transparent;
+    border: var(--border-width) solid var(--color-red);
+    border-radius: var(--border-radius-md);
+    color: var(--color-red);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-red-muted);
+}
+
+.btn-secondary:active {
+    background-color: rgba(225, 6, 0, 0.25);
+}
+
+.btn-secondary:disabled {
+    border-color: var(--color-white-tertiary);
+    color: var(--color-white-tertiary);
+    cursor: not-allowed;
+}
+
+/* Icon Button - Minimal, white icons */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-md);
+    color: var(--color-white-secondary);
+    font-size: var(--font-size-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+    background-color: var(--color-white-hover);
+    color: var(--color-red);
+}
+
+/* Small variant */
+.btn-sm {
+    padding: 8px 16px;
+    font-size: var(--font-size-sm);
+}
+
+/* === CARDS === */
+.card {
+    background-color: var(--color-black-light);
+    border: var(--border-width) solid var(--color-white-border);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+}
+
+.card--elevated {
+    box-shadow: var(--shadow-md);
+}
+
+/* === FORM ELEMENTS === */
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: var(--color-black-surface);
+    border: var(--border-width) solid var(--color-white-border);
+    border-radius: var(--border-radius-md);
+    color: var(--color-white);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    transition: border-color var(--transition-fast);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-red);
+}
+
+input::placeholder {
+    color: var(--color-white-tertiary);
+}
+
+/* === TABLES === */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-white-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: var(--border-width) solid var(--color-white-border);
+}
+
+td {
+    padding: 16px;
+    font-size: var(--font-size-base);
+    color: var(--color-white-muted);
+    border-bottom: var(--border-width) solid rgba(255, 255, 255, 0.05);
+}
+
+tr:hover td {
+    background-color: var(--color-white-hover);
+}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-black-surface);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-white-tertiary);
+}
