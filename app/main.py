@@ -12,12 +12,15 @@ Endpoints:
     GET  /students/at-risk   - Moderate + High risk students (sorted)
     GET  /risk/{student_id}  - Full detail for one student
     POST /simulate/what-if   - What-if intervention simulation
+    POST /ingest/attendance  - Ingest attendance data (NEW)
+    POST /ingest/assignment  - Ingest assignment data (NEW)
+    POST /reset              - Reset data for demo (NEW)
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Literal
 import uvicorn
 
 # Import our modules
@@ -117,28 +120,133 @@ class WhatIfResponse(BaseModel):
 
 
 # =============================================================================
+# INGESTION REQUEST/RESPONSE MODELS (NEW)
+# =============================================================================
+
+class AttendanceIngestRequest(BaseModel):
+    """
+    Request body for ingesting attendance data.
+    
+    Simulates receiving real-time attendance updates from
+    the student information system.
+    """
+    student_id: int = Field(..., description="Student ID to update")
+    attendance_rate: float = Field(
+        ..., 
+        ge=0, 
+        le=100,
+        description="New attendance percentage (0-100)"
+    )
+
+
+class AttendanceIngestResponse(BaseModel):
+    """Response after attendance ingestion."""
+    success: bool
+    studentId: int
+    event: str
+    previousAttendance: float
+    newAttendance: float
+    previousRiskScore: int
+    newRiskScore: int
+    riskLevel: str
+    riskChange: int
+    triggeredRules: List[str]
+
+
+class AssignmentIngestRequest(BaseModel):
+    """
+    Request body for ingesting assignment submission data.
+    
+    Simulates receiving real-time assignment data from
+    the learning management system.
+    """
+    student_id: int = Field(..., description="Student ID to update")
+    status: Literal["on_time", "late", "missing"] = Field(
+        ...,
+        description="Submission status: 'on_time', 'late', or 'missing'"
+    )
+    task_count_change: int = Field(
+        0,
+        description="Change to workload (+1 for new task, -1 for completed)"
+    )
+
+
+class SubmissionChange(BaseModel):
+    """Tracks before/after for a submission metric."""
+    previous: int
+    current: int
+
+
+class AssignmentIngestResponse(BaseModel):
+    """Response after assignment ingestion."""
+    success: bool
+    studentId: int
+    event: str
+    submissionStatus: str
+    lateSubmissions: SubmissionChange
+    missedSubmissions: SubmissionChange
+    workloadTasks: SubmissionChange
+    previousRiskScore: int
+    newRiskScore: int
+    riskLevel: str
+    riskChange: int
+    triggeredRules: List[str]
+
+
+class ResetResponse(BaseModel):
+    """Response after data reset."""
+    success: bool
+    message: str
+    studentsLoaded: int
+    stats: DashboardStats
+
+
+class IngestionEvent(BaseModel):
+    """A single ingestion event from the log."""
+    type: str
+    studentId: int
+    timestamp: str
+    riskChange: int
+
+
+# =============================================================================
 # FASTAPI APP SETUP
 # =============================================================================
 
 app = FastAPI(
     title="Academic Stress Early Warning System API",
-    description="Backend API for detecting and explaining student stress risk using rule-based intelligence.",
+    description="""
+    Backend API for detecting and explaining student stress risk using rule-based intelligence.
+    
+    ## Features
+    - **Rule-based risk scoring** with explainable AI
+    - **Real-time data ingestion** for attendance and assignments
+    - **What-if simulation** for intervention planning
+    - **Dashboard-ready JSON** for React frontend
+    
+    ## Rule Engine
+    The risk score (0-100) is computed using these rules:
+    - Attendance < 75% → +20 points
+    - ≥2 late submissions → +25 points
+    - Workload spike > 40% → +15 points
+    - Missing assignment → +25 points
+    - Attendance drop > 20% → +15 points
+    """,
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
 
 # Enable CORS for frontend development
-# Allows React dev server on localhost:3000, localhost:5173, etc.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",      # Create React App default
-        "http://localhost:5173",      # Vite default
-        "http://localhost:5174",      # Vite alternate
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "*"                           # Allow all for demo purposes
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -147,7 +255,7 @@ app.add_middleware(
 
 
 # =============================================================================
-# API ENDPOINTS
+# HEALTH & INFO ENDPOINTS
 # =============================================================================
 
 @app.get("/", tags=["Health"])
@@ -165,6 +273,10 @@ async def root():
     }
 
 
+# =============================================================================
+# STUDENT DATA ENDPOINTS
+# =============================================================================
+
 @app.get(
     "/students", 
     response_model=AllStudentsResponse,
@@ -179,10 +291,6 @@ async def get_all_students():
     - Render complete student table with sorting
     - Power the stats cards showing risk distribution
     - Enable search/filter across all students
-    
-    **Response includes:**
-    - `students`: Array of all students with basic info
-    - `stats`: Summary counts for dashboard header cards
     """
     students = data_store.get_all_students()
     stats = data_store.get_dashboard_stats()
@@ -206,9 +314,6 @@ async def get_at_risk_students():
     **Frontend Usage:**
     - Power the main dashboard "At-Risk Students" table
     - Highest risk students appear first for immediate attention
-    - Each row is clickable to navigate to detail page
-    
-    **Sorting:** Descending by riskScore (85 → 31)
     """
     at_risk = data_store.get_at_risk_students()
     return [AtRiskStudent(**s) for s in at_risk]
@@ -223,13 +328,6 @@ async def get_at_risk_students():
 async def get_student_risk_detail(student_id: int):
     """
     Returns comprehensive risk profile for a single student.
-    
-    **Frontend Usage:**
-    - Animate the circular risk gauge (0-100)
-    - Display "Why This Student Was Flagged" panel with triggeredRules
-    - Render stress trend line chart with stressTrend data
-    - Show recommendation cards with actionable advice
-    - Pre-fill the What-If Simulator with current values
     
     **Response Fields:**
     - `triggeredRules`: Array of human-readable rule explanations
@@ -247,6 +345,115 @@ async def get_student_risk_detail(student_id: int):
     return StudentRiskDetail(**detail)
 
 
+@app.get(
+    "/stats",
+    response_model=DashboardStats,
+    tags=["Dashboard"],
+    summary="Get dashboard summary statistics"
+)
+async def get_dashboard_stats():
+    """Returns summary statistics for dashboard cards."""
+    return DashboardStats(**data_store.get_dashboard_stats())
+
+
+# =============================================================================
+# INGESTION ENDPOINTS (NEW)
+# =============================================================================
+
+@app.post(
+    "/ingest/attendance",
+    response_model=AttendanceIngestResponse,
+    tags=["Data Ingestion"],
+    summary="Ingest attendance data for a student"
+)
+async def ingest_attendance(request: AttendanceIngestRequest):
+    """
+    Ingest a new attendance record for a student.
+    
+    **Use Case:**
+    Simulates receiving real-time attendance data from the
+    student information system. Updates the student's risk
+    score immediately and returns the change.
+    
+    **Example:**
+    ```json
+    {
+      "student_id": 1001,
+      "attendance_rate": 72.5
+    }
+    ```
+    
+    **Frontend Usage:**
+    - Show real-time risk updates
+    - Trigger notifications when risk increases
+    - Update dashboard in real-time (with polling or WebSocket)
+    """
+    result = data_store.ingest_attendance(
+        student_id=request.student_id,
+        attendance_rate=request.attendance_rate
+    )
+    
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Student with ID {request.student_id} not found"
+        )
+    
+    return AttendanceIngestResponse(**result)
+
+
+@app.post(
+    "/ingest/assignment",
+    response_model=AssignmentIngestResponse,
+    tags=["Data Ingestion"],
+    summary="Ingest assignment submission data"
+)
+async def ingest_assignment(request: AssignmentIngestRequest):
+    """
+    Ingest a new assignment submission event for a student.
+    
+    **Use Case:**
+    Simulates receiving real-time assignment data from the
+    learning management system. Tracks late/missing submissions
+    and workload changes.
+    
+    **Submission Status Values:**
+    - `on_time`: Assignment submitted on time (no risk change)
+    - `late`: Assignment submitted late (+1 late count)
+    - `missing`: Assignment not submitted (+1 missing count)
+    
+    **Example:**
+    ```json
+    {
+      "student_id": 1001,
+      "status": "late",
+      "task_count_change": 1
+    }
+    ```
+    
+    **Frontend Usage:**
+    - Trigger alerts when patterns emerge (e.g., 2+ late)
+    - Update student detail page in real-time
+    """
+    result = data_store.ingest_assignment(
+        student_id=request.student_id,
+        status=request.status,
+        task_count_change=request.task_count_change
+    )
+    
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Student with ID {request.student_id} not found"
+        )
+    
+    return AssignmentIngestResponse(**result)
+
+
+# =============================================================================
+# SIMULATION ENDPOINTS
+# =============================================================================
+
 @app.post(
     "/simulate/what-if",
     response_model=WhatIfResponse,
@@ -261,17 +468,6 @@ async def simulate_what_if(request: WhatIfRequest):
     - Power the "What-If Simulator" slider UI
     - Show real-time risk prediction as sliders change
     - Display risk reduction percentage and explanation
-    
-    **Request Body:**
-    - `student_id`: The student to simulate
-    - `fix_attendance`: If true, assume attendance improves to 90%
-    - `fix_workload`: If true, assume workload reduces to baseline (10 tasks)
-    
-    **Response:**
-    - `originalRisk`: Current risk score
-    - `newRisk`: Predicted score after intervention
-    - `riskReduction`: Points reduced
-    - `explanation`: Human-readable impact description
     """
     student = data_store.get_student(request.student_id)
     
@@ -290,22 +486,55 @@ async def simulate_what_if(request: WhatIfRequest):
     return WhatIfResponse(**result)
 
 
-@app.get(
-    "/stats",
-    response_model=DashboardStats,
-    tags=["Dashboard"],
-    summary="Get dashboard summary statistics"
+# =============================================================================
+# DEMO/ADMIN ENDPOINTS
+# =============================================================================
+
+@app.post(
+    "/reset",
+    response_model=ResetResponse,
+    tags=["Admin"],
+    summary="Reset all data to initial state"
 )
-async def get_dashboard_stats():
+async def reset_data():
     """
-    Returns summary statistics for dashboard cards.
+    Reset all student data to fresh simulated state.
+    
+    **Use Case:**
+    Useful for demo purposes to start with a clean slate.
+    All ingestion history is cleared and new random students
+    are generated.
     
     **Frontend Usage:**
-    - Render the 4 stat cards at top of dashboard
-    - Show total, high risk, moderate risk, low risk counts
-    - Display average risk across all students
+    - "Reset Demo" button in admin panel
+    - Clear all modifications and start fresh
     """
-    return DashboardStats(**data_store.get_dashboard_stats())
+    result = data_store.reset_data()
+    return ResetResponse(
+        success=result["success"],
+        message=result["message"],
+        studentsLoaded=result["studentsLoaded"],
+        stats=DashboardStats(**result["stats"])
+    )
+
+
+@app.get(
+    "/events",
+    tags=["Admin"],
+    summary="Get recent ingestion events"
+)
+async def get_ingestion_events(limit: int = 50):
+    """
+    Get recent data ingestion events.
+    
+    **Frontend Usage:**
+    - Activity log panel
+    - Real-time event feed
+    """
+    return {
+        "events": data_store.get_ingestion_log(limit),
+        "count": len(data_store.get_ingestion_log(limit))
+    }
 
 
 # =============================================================================

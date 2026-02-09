@@ -92,7 +92,13 @@ const Dashboard = () => {
                     <div className="header__logo-icon">🎓</div>
                     <h1 className="header__title">Student Wellness Monitor</h1>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => navigate('/portal')}
+                    >
+                        👤 Student Portal
+                    </button>
                     <button className="btn btn-primary">
                         📊 Generate Report
                     </button>

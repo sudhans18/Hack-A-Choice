@@ -1,0 +1,585 @@
+/*
+ * Student Portal Styles
+ * Calming, supportive design for student-facing interface
+ * 
+ * Theme: Soft gradients (blue → cyan → lavender)
+ * Tone: Empathetic, non-threatening, supportive
+ */
+
+/* ============================================
+   CSS Variables - Calming Color Palette
+   ============================================ */
+.student-portal {
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --cyan: #06b6d4;
+    --cyan-light: #22d3ee;
+    --lavender: #a78bfa;
+    --lavender-light: #c4b5fd;
+
+    /* Soft neutrals */
+    --white: #ffffff;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+
+    /* Status colors - softer versions */
+    --status-good: #10b981;
+    --status-good-bg: rgba(16, 185, 129, 0.1);
+    --status-warning: #f59e0b;
+    --status-warning-bg: rgba(245, 158, 11, 0.1);
+    --status-alert: #f87171;
+    --status-alert-bg: rgba(248, 113, 113, 0.1);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px rgba(59, 130, 246, 0.08);
+    --shadow-medium: 0 8px 30px rgba(59, 130, 246, 0.12);
+    --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.15);
+
+    /* Background */
+    min-height: 100vh;
+    background: linear-gradient(135deg,
+            #e0f2fe 0%,
+            #f0f9ff 30%,
+            #faf5ff 70%,
+            #ede9fe 100%);
+    color: var(--gray-700);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ============================================
+   Layout & Container
+   ============================================ */
+.student-portal__container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: var(--space-4);
+    padding-bottom: calc(var(--space-8) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+    .student-portal__container {
+        max-width: 600px;
+        padding: var(--space-8);
+    }
+}
+
+/* ============================================
+   Header
+   ============================================ */
+.student-portal__header {
+    text-align: center;
+    padding: var(--space-6) 0;
+    animation: slideDown 0.6s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.student-portal__greeting {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin-bottom: var(--space-1);
+}
+
+.student-portal__date {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}
+
+/* ============================================
+   Main Stress Card
+   ============================================ */
+.stress-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: var(--space-8);
+    box-shadow: var(--shadow-medium);
+    text-align: center;
+    margin-bottom: var(--space-6);
+    animation: slideUp 0.6s ease 0.1s both;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stress-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue), var(--cyan), var(--lavender));
+}
+
+.stress-card__title {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gray-500);
+    margin-bottom: var(--space-4);
+}
+
+/* ============================================
+   Circular Wellness Gauge
+   ============================================ */
+.wellness-gauge {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto var(--space-6);
+}
+
+.wellness-gauge__svg {
+    transform: rotate(-90deg);
+}
+
+.wellness-gauge__bg {
+    fill: none;
+    stroke: var(--gray-100);
+    stroke-width: 12;
+}
+
+.wellness-gauge__progress {
+    fill: none;
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 440;
+    stroke-dashoffset: 440;
+    transition: stroke-dashoffset 1.5s ease-out;
+}
+
+.wellness-gauge__progress--good {
+    stroke: url(#gradient-wellness-good);
+}
+
+.wellness-gauge__progress--warning {
+    stroke: url(#gradient-wellness-warning);
+}
+
+.wellness-gauge__progress--alert {
+    stroke: url(#gradient-wellness-alert);
+}
+
+.wellness-gauge__center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.wellness-gauge__score {
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--blue), var(--lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.wellness-gauge__max {
+    font-size: 1rem;
+    color: var(--gray-400);
+    margin-top: var(--space-1);
+}
+
+/* ============================================
+   Friendly Status Message
+   ============================================ */
+.status-message {
+    padding: var(--space-4);
+    border-radius: 16px;
+    margin-bottom: var(--space-4);
+}
+
+.status-message--good {
+    background: var(--status-good-bg);
+    color: var(--status-good);
+}
+
+.status-message--warning {
+    background: var(--status-warning-bg);
+    color: #b45309;
+}
+
+.status-message--alert {
+    background: var(--status-alert-bg);
+    color: #dc2626;
+}
+
+.status-message__icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-2);
+}
+
+.status-message__text {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* ============================================
+   Info Cards
+   ============================================ */
+.info-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: var(--space-5);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: var(--space-4);
+}
+
+.info-card--animated:nth-child(1) {
+    animation: slideUp 0.5s ease 0.2s both;
+}
+
+.info-card--animated:nth-child(2) {
+    animation: slideUp 0.5s ease 0.3s both;
+}
+
+.info-card--animated:nth-child(3) {
+    animation: slideUp 0.5s ease 0.4s both;
+}
+
+.info-card--animated:nth-child(4) {
+    animation: slideUp 0.5s ease 0.5s both;
+}
+
+.info-card__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.info-card__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--blue-light), var(--cyan-light));
+    color: var(--white);
+}
+
+.info-card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+.info-card__subtitle {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+/* ============================================
+   Progress Bars
+   ============================================ */
+.progress-bar {
+    height: 10px;
+    background: var(--gray-100);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar__fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s ease-out;
+}
+
+.progress-bar__fill--blue {
+    background: linear-gradient(90deg, var(--blue), var(--cyan));
+}
+
+.progress-bar__fill--lavender {
+    background: linear-gradient(90deg, var(--lavender), var(--lavender-light));
+}
+
+.progress-bar__label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+}
+
+/* ============================================
+   Mini Chart Container
+   ============================================ */
+.mini-chart {
+    height: 100px;
+    margin-top: var(--space-4);
+}
+
+/* ============================================
+   Recommendation Cards
+   ============================================ */
+.recommendation-section {
+    margin-top: var(--space-6);
+}
+
+.recommendation-section__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.student-recommendation {
+    background: var(--white);
+    border-radius: 16px;
+    padding: var(--space-4);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.student-recommendation:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.student-recommendation:active {
+    transform: scale(0.98);
+}
+
+.student-recommendation__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(167, 139, 250, 0.1));
+    flex-shrink: 0;
+}
+
+.student-recommendation__content {
+    flex: 1;
+}
+
+.student-recommendation__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: var(--space-1);
+}
+
+.student-recommendation__description {
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+    line-height: 1.5;
+}
+
+.student-recommendation__arrow {
+    color: var(--gray-400);
+    font-size: 1.25rem;
+    align-self: center;
+}
+
+/* ============================================
+   Action Button
+   ============================================ */
+.action-button {
+    width: 100%;
+    padding: var(--space-4) var(--space-6);
+    border: none;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.action-button--primary {
+    background: linear-gradient(135deg, var(--blue), var(--lavender));
+    color: var(--white);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.action-button--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+}
+
+.action-button--secondary {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 2px solid var(--gray-200);
+}
+
+.action-button--secondary:hover {
+    border-color: var(--blue-light);
+    color: var(--blue);
+}
+
+/* Ripple effect */
+.action-button::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.4) 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10, 10);
+    opacity: 0;
+    transition: transform 0.5s, opacity 0.5s;
+}
+
+.action-button:active::after {
+    transform: scale(0, 0);
+    opacity: 0.4;
+    transition: 0s;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.student-portal__footer {
+    text-align: center;
+    padding: var(--space-8) 0;
+    color: var(--gray-400);
+    font-size: 0.8125rem;
+}
+
+.student-portal__footer a {
+    color: var(--blue);
+    text-decoration: none;
+}
+
+/* ============================================
+   Student Selector (for demo)
+   ============================================ */
+.student-selector {
+    background: var(--white);
+    border-radius: 16px;
+    padding: var(--space-4);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: var(--space-6);
+    animation: slideUp 0.5s ease 0.05s both;
+}
+
+.student-selector__label {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--gray-500);
+    margin-bottom: var(--space-2);
+}
+
+.student-selector__select {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--gray-700);
+    background: var(--white);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.student-selector__select:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    color: var(--gray-500);
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--gray-200);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: var(--space-4);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   Back Navigation
+   ============================================ */
+.back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    color: var(--gray-500);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    margin-bottom: var(--space-4);
+}
+
+.back-nav:hover {
+    color: var(--blue);
+}
