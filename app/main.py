@@ -26,6 +26,7 @@ import uvicorn
 # Import our modules
 from data_store import data_store
 from risk_engine import what_if_simulation
+from analytics_engine import analytics_engine
 
 
 # =============================================================================
@@ -255,6 +256,22 @@ app.add_middleware(
 
 
 # =============================================================================
+# STARTUP EVENT - Initialize Analytics Engine
+# =============================================================================
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initialize the analytics engine on startup.
+    
+    This runs the ML + Rule fusion pipeline ONCE and caches results.
+    """
+    print("[Startup] Initializing analytics engine...")
+    analytics_engine.load()
+    print(f"[Startup] Analytics ready: {analytics_engine.stats.totalStudents} students analyzed")
+
+
+# =============================================================================
 # HEALTH & INFO ENDPOINTS
 # =============================================================================
 
@@ -271,6 +288,51 @@ async def root():
         "version": "1.0.0",
         "studentsLoaded": len(data_store.get_all_students())
     }
+
+
+# =============================================================================
+# ANALYTICS ENDPOINTS (Precomputed ML + Rule Fusion)
+# =============================================================================
+
+@app.get(
+    "/students/analytics",
+    tags=["Analytics"],
+    summary="Get precomputed analytics for all students"
+)
+async def get_student_analytics():
+    """
+    Returns precomputed ML + Rule fusion analytics for ALL students.
+    
+    This is the primary endpoint for the analytics dashboard.
+    All data is precomputed at startup - NO live predictions.
+    
+    **Response includes:**
+    - Final fused risk score and level
+    - ML model prediction with confidence
+    - Rule-based risk score with triggered rules
+    - SHAP-based feature importance explanation
+    - Summary statistics for dashboard cards
+    """
+    return analytics_engine.get_all_analytics()
+
+
+@app.get(
+    "/students/analytics/{student_id}",
+    tags=["Analytics"],
+    summary="Get analytics for a single student"
+)
+async def get_student_analytics_by_id(student_id: int):
+    """
+    Returns detailed analytics for a single student.
+    
+    **Use for:** Student detail pages showing full breakdown
+    of ML prediction, rule triggers, and SHAP explanation.
+    """
+    from dataclasses import asdict
+    student = analytics_engine.get_student(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student {student_id} not found")
+    return asdict(student)
 
 
 # =============================================================================

@@ -1,242 +1,240 @@
 /**
- * Dashboard Page
+ * Dashboard Page - Analytics Edition
  * 
- * Main admin dashboard showing:
- * - Summary statistics (total students, risk breakdowns)
- * - Sortable table of at-risk students
- * - Clickable rows navigating to student detail
- * 
- * Features glassmorphism styling and smooth animations.
+ * Displays precomputed ML + Rule fusion analytics.
+ * Read-only, deterministic, audit-friendly.
+ * NO sliders, NO prediction buttons.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GlassCard from '../components/GlassCard';
-import RiskBadge from '../components/RiskBadge';
-import { getAtRiskStudents, getDashboardStats } from '../services/api';
+
+import Navbar from '../components/Navbar';
+import LoadingScreen from '../components/LoadingScreen';
+import RiskDistributionChart from '../components/RiskDistributionChart';
+import StressTrendChart from '../components/StressTrendChart';
+import { getAnalytics } from '../services/api';
+import './Dashboard.css';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [students, setStudents] = useState([]);
     const [stats, setStats] = useState(null);
-    const [sortField, setSortField] = useState('riskScore');
-    const [sortDirection, setSortDirection] = useState('desc');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [sortKey, setSortKey] = useState('finalRiskScore');
+    const [sortDir, setSortDir] = useState('desc');
+    const [filterLevel, setFilterLevel] = useState('all');
 
-    // Fetch data on mount
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true);
-            const [studentsData, statsData] = await Promise.all([
-                getAtRiskStudents(),
-                getDashboardStats()
-            ]);
-            setStudents(studentsData);
-            setStats(statsData);
-            setLoading(false);
+            try {
+                setLoading(true);
+                const data = await getAnalytics();
+                setStudents(data.students || []);
+                setStats(data.stats || null);
+                setError(null);
+            } catch (err) {
+                console.error('Failed to load analytics:', err);
+                setError('Failed to load analytics data. Please ensure the backend is running.');
+            } finally {
+                setLoading(false);
+            }
         };
         fetchData();
     }, []);
 
-    // Handle sorting
-    const handleSort = (field) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    // Sort and filter students
+    const displayStudents = [...students]
+        .filter(s => filterLevel === 'all' || s.finalRiskLevel === filterLevel)
+        .sort((a, b) => {
+            const aVal = a[sortKey];
+            const bVal = b[sortKey];
+            return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
+        });
+
+    const handleSort = (key) => {
+        if (sortKey === key) {
+            setSortDir(sortDir === 'desc' ? 'asc' : 'desc');
         } else {
-            setSortField(field);
-            setSortDirection('desc');
+            setSortKey(key);
+            setSortDir('desc');
         }
     };
 
-    // Sort students
-    const sortedStudents = [...students].sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
-
-        if (typeof aVal === 'string') {
-            aVal = aVal.toLowerCase();
-            bVal = bVal.toLowerCase();
-        }
-
-        if (sortDirection === 'asc') {
-            return aVal > bVal ? 1 : -1;
-        } else {
-            return aVal < bVal ? 1 : -1;
-        }
-    });
-
-    // Navigate to student detail
-    const handleRowClick = (studentId) => {
-        navigate(`/student/${studentId}`);
+    const getRiskClass = (level) => {
+        if (level === 'High') return 'risk--high';
+        if (level === 'Moderate') return 'risk--moderate';
+        return 'risk--low';
     };
 
-    // Sort indicator
-    const SortIndicator = ({ field }) => {
-        if (sortField !== field) return <span style={{ opacity: 0.3 }}> ↕</span>;
-        return <span> {sortDirection === 'asc' ? '↑' : '↓'}</span>;
-    };
-
-    if (loading) {
-        return (
-            <div className="container animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
-                <div className="animate-pulse-glow" style={{ fontSize: '2rem' }}>Loading...</div>
-            </div>
-        );
-    }
+    if (loading) return <LoadingScreen />;
 
     return (
-        <div className="container animate-fade-in">
-            {/* Header */}
-            <header className="header">
-                <div className="header__logo">
-                    <div className="header__logo-icon">🎓</div>
-                    <h1 className="header__title">Student Wellness Monitor</h1>
+        <div className="dashboard">
+            <Navbar />
+
+            <main className="dashboard__content">
+                {/* Page Header */}
+                <header className="dashboard__header">
+                    <div>
+                        <h1>Student Analytics</h1>
+                        <p className="dashboard__subtitle">
+                            Precomputed ML + Rule fusion risk assessment
+                        </p>
+                    </div>
+                    <div className="dashboard__meta">
+                        <span className="dashboard__badge">
+                            {stats?.totalStudents || 0} Students Analyzed
+                        </span>
+                    </div>
+                </header>
+
+                {error && (
+                    <div className="dashboard__error">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                {/* Stats Cards */}
+                {stats && (
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-card__value">{stats.totalStudents}</div>
+                            <div className="stat-card__label">Total Students</div>
+                        </div>
+                        <div className="stat-card stat-card--high">
+                            <div className="stat-card__value">{stats.highRisk}</div>
+                            <div className="stat-card__label">High Risk</div>
+                        </div>
+                        <div className="stat-card stat-card--moderate">
+                            <div className="stat-card__value">{stats.moderateRisk}</div>
+                            <div className="stat-card__label">Moderate Risk</div>
+                        </div>
+                        <div className="stat-card stat-card--low">
+                            <div className="stat-card__value">{stats.lowRisk}</div>
+                            <div className="stat-card__label">Low Risk</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-card__value">{stats.averageRiskScore}</div>
+                            <div className="stat-card__label">Avg Risk Score</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-card__value">{(stats.averageConfidence * 100).toFixed(0)}%</div>
+                            <div className="stat-card__label">Avg Confidence</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Charts Row */}
+                <div className="charts-grid">
+                    <RiskDistributionChart
+                        high={stats?.highRisk || 0}
+                        moderate={stats?.moderateRisk || 0}
+                        low={stats?.lowRisk || 0}
+                    />
+                    <StressTrendChart
+                        data={displayStudents.slice(0, 50).map((s, i) => ({
+                            week: `S${s.studentId}`,
+                            score: s.finalRiskScore
+                        }))}
+                    />
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => navigate('/portal')}
-                    >
-                        👤 Student Portal
-                    </button>
-                    <button className="btn btn-primary">
-                        📊 Generate Report
-                    </button>
+
+                {/* Filters */}
+                <div className="dashboard__filters">
+                    <div className="filter-group">
+                        <label>Risk Level:</label>
+                        <select
+                            value={filterLevel}
+                            onChange={(e) => setFilterLevel(e.target.value)}
+                            className="filter-select"
+                        >
+                            <option value="all">All Levels</option>
+                            <option value="High">High Risk</option>
+                            <option value="Moderate">Moderate Risk</option>
+                            <option value="Low">Low Risk</option>
+                        </select>
+                    </div>
+                    <div className="filter-group">
+                        <span className="filter-count">
+                            Showing {displayStudents.length} of {students.length}
+                        </span>
+                    </div>
                 </div>
-            </header>
 
-            {/* Stats Overview */}
-            <div className="stats-grid stagger-children">
-                <GlassCard className="stat-card">
-                    <div className="stat-card__value">{stats?.totalStudents || 0}</div>
-                    <div className="stat-card__label">Total Students Monitored</div>
-                </GlassCard>
-
-                <GlassCard className="stat-card">
-                    <div className="stat-card__value" style={{ color: '#ef4444' }}>
-                        {stats?.highRisk || 0}
-                    </div>
-                    <div className="stat-card__label">High Risk</div>
-                </GlassCard>
-
-                <GlassCard className="stat-card">
-                    <div className="stat-card__value" style={{ color: '#f59e0b' }}>
-                        {stats?.moderateRisk || 0}
-                    </div>
-                    <div className="stat-card__label">Moderate Risk</div>
-                </GlassCard>
-
-                <GlassCard className="stat-card">
-                    <div className="stat-card__value" style={{ color: '#22c55e' }}>
-                        {stats?.lowRisk || 0}
-                    </div>
-                    <div className="stat-card__label">Low Risk</div>
-                </GlassCard>
-            </div>
-
-            {/* Students Table */}
-            <GlassCard noHover style={{ overflow: 'hidden' }}>
-                <h2 style={{ marginBottom: 'var(--space-6)' }}>At-Risk Students</h2>
-
-                <div style={{ overflowX: 'auto' }}>
-                    <table className="data-table">
+                {/* Students Table */}
+                <div className="dashboard__table-container">
+                    <table className="dashboard__table">
                         <thead>
                             <tr>
-                                <th
-                                    onClick={() => handleSort('name')}
-                                    className={sortField === 'name' ? 'sorted' : ''}
-                                >
-                                    Student Name <SortIndicator field="name" />
+                                <th onClick={() => handleSort('studentId')}>
+                                    ID {sortKey === 'studentId' && (sortDir === 'desc' ? '↓' : '↑')}
                                 </th>
-                                <th
-                                    onClick={() => handleSort('department')}
-                                    className={sortField === 'department' ? 'sorted' : ''}
-                                >
-                                    Department <SortIndicator field="department" />
+                                <th onClick={() => handleSort('finalRiskScore')}>
+                                    Risk Score {sortKey === 'finalRiskScore' && (sortDir === 'desc' ? '↓' : '↑')}
                                 </th>
-                                <th
-                                    onClick={() => handleSort('year')}
-                                    className={sortField === 'year' ? 'sorted' : ''}
-                                >
-                                    Year <SortIndicator field="year" />
+                                <th>Risk Level</th>
+                                <th onClick={() => handleSort('mlConfidence')}>
+                                    ML Confidence {sortKey === 'mlConfidence' && (sortDir === 'desc' ? '↓' : '↑')}
                                 </th>
-                                <th
-                                    onClick={() => handleSort('riskScore')}
-                                    className={sortField === 'riskScore' ? 'sorted' : ''}
-                                >
-                                    Risk Score <SortIndicator field="riskScore" />
-                                </th>
-                                <th>Status</th>
-                                <th>Flags</th>
+                                <th>Rule Flags</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody className="stagger-children">
-                            {sortedStudents.map((student) => (
+                        <tbody>
+                            {displayStudents.slice(0, 100).map((student) => (
                                 <tr
-                                    key={student.id}
-                                    onClick={() => handleRowClick(student.id)}
+                                    key={student.studentId}
+                                    className={`table-row ${getRiskClass(student.finalRiskLevel)}`}
                                 >
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                                    <td className="table-cell--id">
+                                        #{student.studentId.toString().padStart(4, '0')}
+                                    </td>
+                                    <td className="table-cell--score">
+                                        <div className="score-bar">
                                             <div
-                                                style={{
-                                                    width: 36,
-                                                    height: 36,
-                                                    borderRadius: 'var(--radius-md)',
-                                                    background: 'linear-gradient(135deg, var(--purple), var(--blue))',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontWeight: 600,
-                                                    fontSize: '0.875rem'
-                                                }}
-                                            >
-                                                {student.name.split(' ').map(n => n[0]).join('')}
-                                            </div>
-                                            <div>
-                                                <div style={{ fontWeight: 500 }}>{student.name}</div>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--gray-400)' }}>
-                                                    {student.email}
-                                                </div>
-                                            </div>
+                                                className="score-bar__fill"
+                                                style={{ width: `${student.finalRiskScore}%` }}
+                                            />
+                                            <span className="score-bar__value">{student.finalRiskScore}</span>
                                         </div>
                                     </td>
-                                    <td style={{ color: 'var(--gray-300)' }}>{student.department}</td>
-                                    <td style={{ color: 'var(--gray-300)' }}>Year {student.year}</td>
                                     <td>
-                                        <span style={{
-                                            fontWeight: 700,
-                                            fontSize: '1.125rem',
-                                            color: student.riskScore > 60 ? '#ef4444' :
-                                                student.riskScore > 30 ? '#f59e0b' : '#22c55e'
-                                        }}>
-                                            {student.riskScore}
+                                        <span className={`risk-badge ${getRiskClass(student.finalRiskLevel)}`}>
+                                            {student.finalRiskLevel}
                                         </span>
                                     </td>
-                                    <td>
-                                        <RiskBadge score={student.riskScore} />
+                                    <td className="table-cell--confidence">
+                                        {(student.mlConfidence * 100).toFixed(0)}%
                                     </td>
-                                    <td style={{ color: 'var(--gray-400)' }}>
-                                        {student.triggeredRules.length > 0
-                                            ? `${student.triggeredRules.length} rule${student.triggeredRules.length > 1 ? 's' : ''} triggered`
-                                            : '—'}
+                                    <td className="table-cell--flags">
+                                        {student.ruleTriggers?.length || 0} flags
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="btn-secondary btn-sm"
+                                            onClick={() => navigate(`/student/${student.studentId}`)}
+                                        >
+                                            View Details
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-            </GlassCard>
 
-            {/* Footer */}
-            <footer style={{
-                textAlign: 'center',
-                padding: 'var(--space-8) 0',
-                color: 'var(--gray-500)',
-                fontSize: '0.875rem'
-            }}>
-                Academic Stress Early Warning System • Prototype Demo
-            </footer>
+                {/* Footer */}
+                <footer className="dashboard__footer">
+                    COGNIS Analytics • {stats?.totalStudents || 0} students • Read-only dashboard
+                </footer>
+            </main>
         </div>
     );
 };

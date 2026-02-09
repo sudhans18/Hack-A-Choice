@@ -1,12 +1,9 @@
 /**
- * StudentDetail Page
+ * StudentDetail Page - Analytics Edition
  * 
- * Comprehensive risk profile for a single student showing:
- * - Animated circular gauge with stress score
- * - Rule explanation panel (why this student was flagged)
- * - Stress trend timeline (line chart)
- * - Recommendation cards
- * - What-If Simulator for exploring scenarios
+ * Displays precomputed ML + Rule fusion analytics for a single student.
+ * Shows SHAP feature importance, rule triggers, and ML confidence.
+ * NO interactive sliders or prediction buttons.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -17,27 +14,25 @@ import {
     LinearScale,
     PointElement,
     LineElement,
+    BarElement,
     Title,
     Tooltip,
     Filler,
     Legend
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2';
 
-import GlassCard from '../components/GlassCard';
-import RiskBadge from '../components/RiskBadge';
+import Navbar from '../components/Navbar';
 import CircularGauge from '../components/CircularGauge';
-import RecommendationCard from '../components/RecommendationCard';
-import WhatIfSimulator from '../components/WhatIfSimulator';
 import { getStudentRisk } from '../services/api';
-import { getRiskLevel } from '../data/mockData';
+import './StudentDetail.css';
 
-// Register Chart.js components
 ChartJS.register(
     CategoryScale,
     LinearScale,
     PointElement,
     LineElement,
+    BarElement,
     Title,
     Tooltip,
     Filler,
@@ -50,7 +45,6 @@ const StudentDetail = () => {
     const [student, setStudent] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetch student data
     useEffect(() => {
         const fetchStudent = async () => {
             setLoading(true);
@@ -61,197 +55,273 @@ const StudentDetail = () => {
         fetchStudent();
     }, [studentId]);
 
+    const getRiskClass = (score) => {
+        if (score >= 61) return 'risk--high';
+        if (score >= 31) return 'risk--moderate';
+        return 'risk--low';
+    };
+
+    const getMlLevelLabel = (prediction) => {
+        const labels = { 0: 'Low', 1: 'Moderate', 2: 'High' };
+        return labels[prediction] || 'Unknown';
+    };
+
     if (loading) {
         return (
-            <div className="container animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
-                <div className="animate-pulse-glow" style={{ fontSize: '2rem' }}>Loading...</div>
+            <div className="student-detail">
+                <Navbar />
+                <div className="student-detail__loading">
+                    <div className="student-detail__spinner"></div>
+                    <p>Loading analytics...</p>
+                </div>
             </div>
         );
     }
 
     if (!student) {
         return (
-            <div className="container animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
-                <h2>Student not found</h2>
-                <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 'var(--space-4)' }}>
-                    Back to Dashboard
-                </button>
+            <div className="student-detail">
+                <Navbar />
+                <div className="student-detail__error">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <h2>Student Not Found</h2>
+                    <p>The requested student profile could not be located.</p>
+                    <button className="btn-primary" onClick={() => navigate('/')}>
+                        Return to Dashboard
+                    </button>
+                </div>
             </div>
         );
     }
 
-    const riskLevel = getRiskLevel(student.riskScore);
-
-    // Chart configuration
-    const chartData = {
-        labels: student.stressTrend.map(d => d.week),
-        datasets: [
-            {
-                label: 'Stress Risk Score',
-                data: student.stressTrend.map(d => d.score),
-                fill: true,
-                borderColor: riskLevel === 'high' ? '#ef4444' :
-                    riskLevel === 'moderate' ? '#f59e0b' : '#22c55e',
-                backgroundColor: riskLevel === 'high' ? 'rgba(239, 68, 68, 0.1)' :
-                    riskLevel === 'moderate' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                tension: 0.4,
-                pointBackgroundColor: riskLevel === 'high' ? '#ef4444' :
-                    riskLevel === 'moderate' ? '#f59e0b' : '#22c55e',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }
-        ]
+    // Trend chart configuration
+    const trendData = {
+        labels: student.stressTrend?.map(d => d.week) || [],
+        datasets: [{
+            label: 'Risk Score',
+            data: student.stressTrend?.map(d => d.score) || [],
+            fill: true,
+            borderColor: '#E10600',
+            backgroundColor: 'rgba(225, 6, 0, 0.1)',
+            tension: 0.3,
+            pointBackgroundColor: '#E10600',
+            pointBorderColor: '#0B0B0B',
+            pointBorderWidth: 2,
+            pointRadius: 3
+        }]
     };
 
-    const chartOptions = {
+    const trendOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.38)' } },
+            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.38)' } }
+        }
+    };
+
+    // SHAP explanation bar chart
+    const shapData = {
+        labels: student.shapExplanation?.map(s => s.feature) || [],
+        datasets: [{
+            label: 'Impact',
+            data: student.shapExplanation?.map(s => s.impact) || [],
+            backgroundColor: student.shapExplanation?.map(s =>
+                s.impact > 0 ? 'rgba(225, 6, 0, 0.8)' : 'rgba(255, 255, 255, 0.3)'
+            ) || [],
+            borderRadius: 4,
+            barThickness: 24
+        }]
+    };
+
+    const shapOptions = {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false
-            },
+            legend: { display: false },
             tooltip: {
-                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                titleColor: '#fff',
-                bodyColor: '#cbd5e1',
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                borderWidth: 1,
-                padding: 12,
-                cornerRadius: 8,
-                displayColors: false,
+                backgroundColor: '#0B0B0B',
+                titleColor: '#FFFFFF',
+                bodyColor: 'rgba(255,255,255,0.8)',
                 callbacks: {
-                    label: (context) => `Risk Score: ${context.raw}`
+                    label: (ctx) => `Impact: ${ctx.raw > 0 ? '+' : ''}${ctx.raw.toFixed(3)}`
                 }
             }
         },
         scales: {
-            x: {
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
-                    drawBorder: false
-                },
-                ticks: {
-                    color: '#64748b'
-                }
-            },
-            y: {
-                min: 0,
-                max: 100,
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
-                    drawBorder: false
-                },
-                ticks: {
-                    color: '#64748b',
-                    stepSize: 20
-                }
-            }
-        },
-        interaction: {
-            intersect: false,
-            mode: 'index'
+            x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: 'rgba(255,255,255,0.38)' } },
+            y: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.6)' } }
         }
     };
 
     return (
-        <div className="container animate-fade-in">
-            {/* Back Button */}
-            <div style={{ marginBottom: 'var(--space-6)', paddingTop: 'var(--space-6)' }}>
-                <button className="back-btn" onClick={() => navigate('/')}>
-                    ← Back to Dashboard
-                </button>
-            </div>
+        <div className="student-detail">
+            <Navbar />
 
-            {/* Student Header */}
-            <div className="student-header">
-                <div className="student-header__avatar">
-                    {student.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div className="student-header__info">
-                    <h1>{student.name}</h1>
-                    <div className="student-header__meta">
-                        <span>📧 {student.email}</span>
-                        <span>🏛️ {student.department}</span>
-                        <span>📚 Year {student.year}</span>
+            <main className="student-detail__content">
+                {/* Back Button */}
+                <button className="student-detail__back" onClick={() => navigate('/')}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="15,18 9,12 15,6" />
+                    </svg>
+                    Back to Dashboard
+                </button>
+
+                {/* Student Header */}
+                <header className="student-header">
+                    <div className="student-header__avatar">
+                        #{student.id || studentId}
+                    </div>
+                    <div className="student-header__info">
+                        <h1>Student #{studentId}</h1>
+                        <div className="student-header__meta">
+                            <span>Analytics Profile</span>
+                            <span>ML Confidence: {(student.mlConfidence * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                    <div className="student-header__status">
+                        <span className={`risk-badge ${getRiskClass(student.riskScore)}`}>
+                            {student.riskLevel} RISK
+                        </span>
+                    </div>
+                </header>
+
+                {/* Analytics Summary Grid */}
+                <div className="analytics-summary">
+                    <div className="analytics-card">
+                        <h4>Final Fused Score</h4>
+                        <div className="analytics-card__value">{student.riskScore}</div>
+                        <p>Weighted: 60% ML + 40% Rules</p>
+                    </div>
+                    <div className="analytics-card">
+                        <h4>ML Prediction</h4>
+                        <div className="analytics-card__value">{getMlLevelLabel(student.mlPrediction)}</div>
+                        <p>Confidence: {(student.mlConfidence * 100).toFixed(0)}%</p>
+                    </div>
+                    <div className="analytics-card">
+                        <h4>Rule Score</h4>
+                        <div className="analytics-card__value">{student.ruleRiskScore || 0}</div>
+                        <p>{student.triggeredRules?.length || 0} rules triggered</p>
                     </div>
                 </div>
-                <div style={{ marginLeft: 'auto' }}>
-                    <RiskBadge score={student.riskScore} />
-                </div>
-            </div>
 
-            {/* Main Content Grid */}
-            <div className="detail-grid">
-                {/* Left Column - Gauge & Rules */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-                    {/* Risk Score Gauge */}
-                    <GlassCard noHover style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <h3 style={{ marginBottom: 'var(--space-4)' }}>Current Risk Level</h3>
-                        <CircularGauge score={student.riskScore} size={200} />
-                    </GlassCard>
-
-                    {/* Rule Explanation Panel */}
-                    <GlassCard className="rule-panel" noHover>
-                        <div className="rule-panel__header">
-                            <span className="rule-panel__icon">⚠️</span>
-                            <h3>Why This Student Was Flagged</h3>
+                {/* Main Grid */}
+                <div className="detail-grid">
+                    {/* Left Column */}
+                    <div className="detail-column">
+                        {/* Risk Gauge */}
+                        <div className="detail-card">
+                            <h3 className="detail-card__title">Current Risk Level</h3>
+                            <div className="detail-card__gauge">
+                                <CircularGauge score={student.riskScore} size={180} />
+                            </div>
                         </div>
 
-                        {student.triggeredRules.length > 0 ? (
-                            <ul className="rule-list">
-                                {student.triggeredRules.map((rule, index) => (
-                                    <li key={index} className="rule-list__item">
-                                        <span className="rule-list__indicator"></span>
-                                        <span className="rule-list__text">{rule}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p style={{ color: 'var(--gray-400)', marginTop: 'var(--space-4)' }}>
-                                No risk factors detected. This student is in good standing.
-                            </p>
-                        )}
-                    </GlassCard>
-                </div>
+                        {/* Rule Triggers */}
+                        <div className="detail-card">
+                            <div className="detail-card__header">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                                <h3>Rule-Based Triggers</h3>
+                            </div>
 
-                {/* Right Column - Chart */}
-                <GlassCard className="chart-container" noHover>
-                    <h3>📈 Stress Trend Over Time</h3>
-                    <div style={{ height: '220px', marginTop: 'var(--space-4)' }}>
-                        <Line data={chartData} options={chartOptions} />
+                            {student.triggeredRules?.length > 0 ? (
+                                <ul className="rule-list">
+                                    {student.triggeredRules.map((rule, index) => (
+                                        <li key={index} className="rule-list__item">
+                                            <span className="rule-list__indicator"></span>
+                                            <span className="rule-list__text">{rule}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="detail-card__empty">
+                                    No rule-based risk factors detected.
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </GlassCard>
-            </div>
 
-            {/* Recommendations Section */}
-            <GlassCard noHover style={{ marginBottom: 'var(--space-6)' }}>
-                <h3 style={{ marginBottom: 'var(--space-6)' }}>💡 Recommended Actions</h3>
-                <div className="recommendations-grid stagger-children">
-                    {student.recommendations.map((rec) => (
-                        <RecommendationCard
-                            key={rec.id}
-                            icon={rec.icon}
-                            title={rec.title}
-                            description={rec.description}
-                        />
-                    ))}
+                    {/* Right Column - Charts */}
+                    <div className="detail-column">
+                        {/* Trend Chart */}
+                        <div className="detail-card detail-card--chart">
+                            <h3 className="detail-card__title">Risk Trend</h3>
+                            <div className="detail-card__chart" style={{ height: 180 }}>
+                                <Line data={trendData} options={trendOptions} />
+                            </div>
+                        </div>
+
+                        {/* SHAP Explanation */}
+                        <div className="detail-card detail-card--chart">
+                            <h3 className="detail-card__title">Feature Importance (SHAP)</h3>
+                            <p className="detail-card__subtitle">
+                                Top contributing factors to risk prediction
+                            </p>
+                            <div className="detail-card__chart" style={{ height: 200 }}>
+                                {student.shapExplanation?.length > 0 ? (
+                                    <Bar data={shapData} options={shapOptions} />
+                                ) : (
+                                    <p className="detail-card__empty">No SHAP data available</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </GlassCard>
 
-            {/* What-If Simulator */}
-            <WhatIfSimulator student={student} />
+                {/* Raw Features */}
+                <div className="detail-card">
+                    <h3 className="detail-card__title">Raw Feature Values</h3>
+                    <div className="features-grid">
+                        <div className="feature-item">
+                            <span className="feature-item__label">Anxiety Level</span>
+                            <span className="feature-item__value">{student.anxiety_level}/21</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Depression</span>
+                            <span className="feature-item__value">{student.depression}/27</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Sleep Quality</span>
+                            <span className="feature-item__value">{student.sleep_quality}/5</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Academic Performance</span>
+                            <span className="feature-item__value">{student.academic_performance}/5</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Social Support</span>
+                            <span className="feature-item__value">{student.social_support}/3</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Peer Pressure</span>
+                            <span className="feature-item__value">{student.peer_pressure}/5</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Study Load</span>
+                            <span className="feature-item__value">{student.study_load}/5</span>
+                        </div>
+                        <div className="feature-item">
+                            <span className="feature-item__label">Bullying Exposure</span>
+                            <span className="feature-item__value">{student.bullying}/5</span>
+                        </div>
+                    </div>
+                </div>
 
-            {/* Footer */}
-            <footer style={{
-                textAlign: 'center',
-                padding: 'var(--space-8) 0',
-                color: 'var(--gray-500)',
-                fontSize: '0.875rem'
-            }}>
-                Academic Stress Early Warning System • Prototype Demo
-            </footer>
+                {/* Footer */}
+                <footer className="student-detail__footer">
+                    COGNIS Analytics • Read-only audit trail
+                </footer>
+            </main>
         </div>
     );
 };

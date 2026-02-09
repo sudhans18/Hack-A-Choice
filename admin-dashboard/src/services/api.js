@@ -1,35 +1,78 @@
 /**
- * API Service Layer
+ * API Service Layer - Analytics Edition
  * 
- * Connects to the FastAPI backend for the Academic Stress Early Warning System.
+ * Connects to the FastAPI backend for precomputed analytics.
+ * NO live predictions - all data is precomputed at server startup.
+ * 
  * Base URL: http://localhost:8000
  */
 
 const API_BASE_URL = 'http://localhost:8000';
 
 /**
- * GET /students/at-risk
- * Fetches all students who have been flagged with risk indicators
- * Sorted by risk score (highest first)
+ * GET /students/analytics
+ * Fetches ALL precomputed student analytics with ML + Rule fusion.
+ * This is the primary data source for the dashboard.
+ * 
+ * @returns {Promise<Object>} { students: [...], stats: {...} }
+ */
+export const getAnalytics = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/students/analytics`);
+        if (!response.ok) throw new Error('Failed to fetch analytics');
+        return await response.json();
+    } catch (error) {
+        console.error('Analytics API Error:', error);
+        throw error;
+    }
+};
+
+/**
+ * GET /students/analytics/{studentId}
+ * Fetches detailed analytics for a single student.
+ * Includes ML prediction, rule triggers, and SHAP explanation.
+ * 
+ * @param {string|number} studentId - The student's unique ID
+ * @returns {Promise<Object|null>} Student analytics or null if not found
+ */
+export const getStudentAnalytics = async (studentId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/students/analytics/${studentId}`);
+        if (!response.ok) {
+            if (response.status === 404) return null;
+            throw new Error('Failed to fetch student analytics');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Analytics API Error:', error);
+        throw error;
+    }
+};
+
+/**
+ * GET /students/at-risk (Legacy - kept for compatibility)
+ * Fetches students flagged with risk indicators.
+ * 
  * @returns {Promise<Array>} List of at-risk students
  */
 export const getAtRiskStudents = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/students/at-risk`);
-        if (!response.ok) throw new Error('Failed to fetch at-risk students');
-
-        const data = await response.json();
-
-        // Transform to frontend format
-        return data.map(student => ({
-            id: String(student.studentId),
-            name: student.name,
-            email: student.email,
-            department: student.department,
-            year: student.year,
-            riskScore: student.riskScore,
-            triggeredRules: [], // Will be fetched in detail view
-        }));
+        // Use analytics endpoint and filter
+        const data = await getAnalytics();
+        return data.students
+            .filter(s => s.finalRiskLevel !== 'Low')
+            .sort((a, b) => b.finalRiskScore - a.finalRiskScore)
+            .map(student => ({
+                id: String(student.studentId),
+                name: `Student ${student.studentId}`,
+                email: `student${student.studentId}@university.edu`,
+                department: 'Analytics',
+                year: Math.ceil(student.studentId % 4) + 1,
+                riskScore: student.finalRiskScore,
+                riskLevel: student.finalRiskLevel,
+                mlConfidence: student.mlConfidence,
+                triggeredRules: student.ruleTriggers || [],
+            }));
     } catch (error) {
         console.error('API Error:', error);
         throw error;
@@ -37,43 +80,44 @@ export const getAtRiskStudents = async () => {
 };
 
 /**
- * GET /risk/{studentId}
- * Fetches detailed risk profile for a specific student
+ * GET /risk/{studentId} (Legacy - redirects to analytics)
+ * Fetches detailed risk profile for a specific student.
+ * 
  * @param {string} studentId - The student's unique ID
- * @returns {Promise<Object|null>} Student risk profile or null if not found
+ * @returns {Promise<Object|null>} Student risk profile or null
  */
 export const getStudentRisk = async (studentId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/risk/${studentId}`);
-        if (!response.ok) {
-            if (response.status === 404) return null;
-            throw new Error('Failed to fetch student risk');
-        }
+        const data = await getStudentAnalytics(studentId);
+        if (!data) return null;
 
-        const data = await response.json();
-
-        // Transform to frontend format
+        // Transform to expected frontend format
         return {
             id: String(data.studentId),
-            name: data.name,
-            email: data.email,
-            department: data.department,
-            year: data.year,
-            riskScore: data.riskScore,
-            triggeredRules: data.triggeredRules,
-            stressTrend: data.stressTrend.map(point => ({
-                week: point.week,
-                score: point.score
-            })),
-            recommendations: data.recommendations.map((rec, idx) => ({
-                id: idx + 1,
-                icon: rec.icon,
-                title: rec.title,
-                description: rec.description
-            })),
-            attendance: data.attendance,
-            lateSubmissions: data.lateSubmissions,
-            workloadTasks: data.workloadTasks
+            name: `Student ${data.studentId}`,
+            email: `student${data.studentId}@university.edu`,
+            department: 'Analytics',
+            year: Math.ceil(data.studentId % 4) + 1,
+            riskScore: data.finalRiskScore,
+            riskLevel: data.finalRiskLevel,
+            mlPrediction: data.mlPrediction,
+            mlConfidence: data.mlConfidence,
+            ruleRiskScore: data.ruleRiskScore,
+            triggeredRules: data.ruleTriggers || [],
+            shapExplanation: data.shapExplanation || [],
+            // Raw features for display
+            anxiety_level: data.anxiety_level,
+            depression: data.depression,
+            sleep_quality: data.sleep_quality,
+            academic_performance: data.academic_performance,
+            social_support: data.social_support,
+            peer_pressure: data.peer_pressure,
+            study_load: data.study_load,
+            bullying: data.bullying,
+            // Mock trend data (analytics is static, no real trend)
+            stressTrend: generateMockTrend(data.finalRiskScore),
+            // No recommendations in analytics mode
+            recommendations: [],
         };
     } catch (error) {
         console.error('API Error:', error);
@@ -82,90 +126,39 @@ export const getStudentRisk = async (studentId) => {
 };
 
 /**
- * GET /stats
- * Fetches summary statistics for the dashboard
+ * Generate mock trend data based on final risk score.
+ * Since analytics is static, we simulate historical trend.
+ */
+const generateMockTrend = (currentScore) => {
+    const weeks = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'];
+    const trend = [];
+
+    for (let i = 0; i < weeks.length; i++) {
+        // Gradually increase to current score with some variance
+        const progress = (i + 1) / weeks.length;
+        const base = currentScore * progress;
+        const variance = (Math.random() - 0.5) * 15;
+        const score = Math.max(0, Math.min(100, Math.round(base + variance)));
+        trend.push({ week: weeks[i], score });
+    }
+
+    // Ensure last point is close to actual score
+    trend[trend.length - 1].score = currentScore;
+    return trend;
+};
+
+/**
+ * GET /stats - Dashboard statistics
+ * Now derived from analytics endpoint.
+ * 
  * @returns {Promise<Object>} Dashboard statistics
  */
 export const getDashboardStats = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/stats`);
-        if (!response.ok) throw new Error('Failed to fetch stats');
-        return await response.json();
+        const data = await getAnalytics();
+        return data.stats;
     } catch (error) {
         console.error('API Error:', error);
         throw error;
     }
-};
-
-/**
- * POST /simulate/what-if
- * Simulate the impact of interventions on student's risk score
- * @param {Object} params - Simulation parameters
- * @param {number} params.studentId - Student ID
- * @param {boolean} params.fixAttendance - Whether to simulate fixing attendance
- * @param {boolean} params.fixWorkload - Whether to simulate fixing workload
- * @returns {Promise<Object>} Simulation result
- */
-export const simulateWhatIf = async ({ studentId, fixAttendance, fixWorkload }) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/simulate/what-if`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                student_id: Number(studentId),
-                fix_attendance: fixAttendance,
-                fix_workload: fixWorkload
-            })
-        });
-
-        if (!response.ok) throw new Error('Failed to run simulation');
-        return await response.json();
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
-    }
-};
-
-/**
- * Calculate predicted risk score based on what-if parameters
- * This is a client-side simulation matching the backend rules
- * @param {Object} params - Modified parameters
- * @param {number} params.attendance - Attendance percentage (0-100)
- * @param {number} params.lateSubmissions - Number of late submissions
- * @param {number} params.workloadTasks - Number of tasks per week
- * @param {number} baseScore - Current base risk score
- * @returns {number} Predicted risk score
- */
-export const calculateWhatIfScore = (params, baseScore) => {
-    let score = 0;
-
-    // Rule 1: Attendance Drop
-    if (params.attendance < 75) {
-        score += 20;
-    }
-
-    // Rule 2: Consecutive Late Submissions
-    if (params.lateSubmissions >= 2) {
-        score += 25;
-    }
-
-    // Rule 3: Workload Spike (> 12 tasks is considered heavy)
-    if (params.workloadTasks > 12) {
-        score += 15;
-    }
-
-    // Rule 4: Missing Submissions (assume late > 3 means some missed)
-    if (params.lateSubmissions > 3) {
-        score += 25;
-    }
-
-    // Rule 5: Behavior Change (simplified - low attendance + high workload)
-    if (params.attendance < 80 && params.workloadTasks > 10) {
-        score += 15;
-    }
-
-    // Cap at 100
-    return Math.min(100, score);
 };

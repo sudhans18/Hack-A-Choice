@@ -1,0 +1,79 @@
+/*
+ * Chart Card Styles - Enterprise Edition
+ * Black background, clean borders, minimal
+ */
+
+.chart-card {
+    background-color: var(--color-black-light, #141414);
+    border: 1px solid var(--color-white-border, rgba(255, 255, 255, 0.12));
+    border-radius: var(--border-radius-lg, 12px);
+    padding: var(--spacing-lg, 24px);
+}
+
+.chart-card__header {
+    margin-bottom: 20px;
+}
+
+.chart-card__title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-white, #FFFFFF);
+    margin: 0 0 4px;
+}
+
+.chart-card__subtitle {
+    font-size: 0.75rem;
+    color: var(--color-white-tertiary, rgba(255, 255, 255, 0.38));
+}
+
+.chart-card__body {
+    height: 220px;
+    position: relative;
+}
+
+.chart-card__body--donut {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Center text for donut chart */
+.chart-card__center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.chart-card__center-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-white, #FFFFFF);
+    line-height: 1;
+}
+
+.chart-card__center-label {
+    display: block;
+    font-size: 0.625rem;
+    color: var(--color-white-tertiary, rgba(255, 255, 255, 0.38));
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+}
+
+/* Charts grid layout */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}

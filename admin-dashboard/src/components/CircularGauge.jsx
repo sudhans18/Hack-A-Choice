@@ -1,30 +1,38 @@
 /**
- * CircularGauge Component
+ * CircularGauge Component - Enterprise Edition
  * 
  * SVG-based animated circular progress indicator
- * displaying stress risk score (0-100).
- * 
- * Features:
- * - Smooth animation from 0 to actual score
- * - Color-coded based on risk level (green/amber/red gradient)
- * - Central score display with label
+ * using red/white color scheme only.
  */
 
 import React, { useEffect, useState } from 'react';
-import { getRiskLevel } from '../data/mockData';
 
 const CircularGauge = ({ score, size = 200 }) => {
     const [animatedScore, setAnimatedScore] = useState(0);
     const [offset, setOffset] = useState(440);
 
-    const level = getRiskLevel(score);
     const radius = 70;
-    const circumference = 2 * Math.PI * radius; // ~440
+    const circumference = 2 * Math.PI * radius;
 
-    // Animate the score counting up
+    // Risk level determination
+    const getRiskLevel = (s) => {
+        if (s >= 61) return 'high';
+        if (s >= 31) return 'moderate';
+        return 'low';
+    };
+
+    const level = getRiskLevel(score);
+
+    // Get color based on risk level (red intensity scale)
+    const getColor = (riskLevel) => {
+        if (riskLevel === 'high') return '#E10600';
+        if (riskLevel === 'moderate') return '#FF6B66';
+        return 'rgba(255, 255, 255, 0.4)';
+    };
+
     useEffect(() => {
-        const duration = 1500; // 1.5 seconds
-        const steps = 60;
+        const duration = 1200;
+        const steps = 50;
         const increment = score / steps;
         let currentStep = 0;
 
@@ -32,7 +40,6 @@ const CircularGauge = ({ score, size = 200 }) => {
             currentStep++;
             if (currentStep <= steps) {
                 setAnimatedScore(Math.round(increment * currentStep));
-                // Calculate stroke offset for progress
                 const progress = (increment * currentStep) / 100;
                 setOffset(circumference - (progress * circumference));
             } else {
@@ -45,66 +52,68 @@ const CircularGauge = ({ score, size = 200 }) => {
         return () => clearInterval(timer);
     }, [score, circumference]);
 
-    return (
-        <div className="circular-gauge" style={{ width: size, height: size }}>
-            {/* SVG Gradient Definitions */}
-            <svg width="0" height="0">
-                <defs>
-                    <linearGradient id="gradient-low" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#22c55e" />
-                        <stop offset="100%" stopColor="#4ade80" />
-                    </linearGradient>
-                    <linearGradient id="gradient-moderate" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#f59e0b" />
-                        <stop offset="100%" stopColor="#fbbf24" />
-                    </linearGradient>
-                    <linearGradient id="gradient-high" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#ef4444" />
-                        <stop offset="100%" stopColor="#f87171" />
-                    </linearGradient>
-                </defs>
-            </svg>
+    const color = getColor(level);
 
-            {/* Main Gauge Circle */}
+    return (
+        <div className="circular-gauge" style={{ width: size, height: size, position: 'relative' }}>
             <svg
-                className="circular-gauge__svg"
                 width={size}
                 height={size}
                 viewBox="0 0 200 200"
+                style={{ transform: 'rotate(-90deg)' }}
             >
                 {/* Background Circle */}
                 <circle
-                    className="circular-gauge__bg"
                     cx="100"
                     cy="100"
                     r={radius}
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.1)"
+                    strokeWidth="8"
                 />
 
                 {/* Progress Circle */}
                 <circle
-                    className={`circular-gauge__progress circular-gauge__progress--${level}`}
                     cx="100"
                     cy="100"
                     r={radius}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth="8"
+                    strokeLinecap="round"
                     style={{
                         strokeDasharray: circumference,
-                        strokeDashoffset: offset
+                        strokeDashoffset: offset,
+                        transition: 'stroke-dashoffset 0.1s ease-out'
                     }}
                 />
             </svg>
 
             {/* Center Score Display */}
-            <div className="circular-gauge__value">
-                <div
-                    className="circular-gauge__score"
-                    style={{
-                        color: level === 'high' ? '#ef4444' :
-                            level === 'moderate' ? '#f59e0b' : '#22c55e'
-                    }}
-                >
+            <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                textAlign: 'center'
+            }}>
+                <div style={{
+                    fontSize: size * 0.2,
+                    fontWeight: 700,
+                    color: color,
+                    lineHeight: 1
+                }}>
                     {animatedScore}
                 </div>
-                <div className="circular-gauge__label">Risk Score</div>
+                <div style={{
+                    fontSize: size * 0.055,
+                    color: 'rgba(255, 255, 255, 0.38)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    marginTop: 4
+                }}>
+                    Risk Score
+                </div>
             </div>
         </div>
     );
