@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../providers/providers.dart';
 import '../../../data/models/student.dart';
 import '../../../data/services/mock_data_service.dart';
+import '../../../data/services/email_service.dart';
 import '../../student/widgets/stress_gauge_widget.dart';
 
 class StudentDetailScreen extends ConsumerWidget {
@@ -324,33 +325,60 @@ class StudentDetailScreen extends ConsumerWidget {
                 ).animate().fadeIn(delay: 700.ms, duration: 400.ms),
                 const SizedBox(height: 12),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Email feature coming soon')),
-                          );
-                        },
-                        icon: const Icon(Icons.email_rounded),
-                        label: const Text('Contact Student'),
+                riskScoreAsync.when(
+                  data: (riskScore) => Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            final success = await EmailService.sendStudentAlert(
+                              studentName: student.name,
+                              studentId: student.id,
+                              riskScore: riskScore.score,
+                              riskLevel: riskScore.level.displayName,
+                              triggeredRules: riskScore.triggeredRules
+                                  .map((r) => r.ruleName)
+                                  .toList(),
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    success
+                                        ? 'Opening email to ${EmailService.getStudentEmail(student.name) ?? "counselor"}...'
+                                        : 'Could not open email client',
+                                  ),
+                                  backgroundColor:
+                                      success ? AppColors.riskLow : AppColors.riskHigh,
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.email_rounded),
+                          label: Text(
+                            EmailService.hasStudentEmail(student.name)
+                                ? 'Email Alert'
+                                : 'Contact Counselor',
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Note feature coming soon')),
-                          );
-                        },
-                        icon: const Icon(Icons.note_add_rounded),
-                        label: const Text('Add Note'),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Note feature coming soon')),
+                            );
+                          },
+                          icon: const Icon(Icons.note_add_rounded),
+                          label: const Text('Add Note'),
+                        ),
                       ),
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 800.ms, duration: 400.ms),
+                    ],
+                  ).animate().fadeIn(delay: 800.ms, duration: 400.ms),
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
                 const SizedBox(height: 80),
               ],
             ),

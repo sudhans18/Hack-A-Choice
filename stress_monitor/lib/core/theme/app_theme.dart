@@ -49,13 +49,11 @@ class AppTheme {
           color: AppColors.textPrimaryLight,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.cardLight,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.08),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -101,7 +99,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surfaceLight,
@@ -110,10 +111,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      dividerTheme: DividerThemeData(
-        color: Colors.grey.shade200,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: Colors.grey.shade200, thickness: 1),
     );
   }
 
@@ -132,23 +130,24 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.backgroundDark,
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        displayMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        displaySmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        headlineLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        headlineMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        headlineSmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        titleLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        titleMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        titleSmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        bodyLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        bodyMedium: GoogleFonts.inter(color: AppColors.textSecondaryDark),
-        bodySmall: GoogleFonts.inter(color: AppColors.textSecondaryDark),
-        labelLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
-        labelMedium: GoogleFonts.inter(color: AppColors.textSecondaryDark),
-        labelSmall: GoogleFonts.inter(color: AppColors.textSecondaryDark),
-      ),
+      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme)
+          .copyWith(
+            displayLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            displayMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            displaySmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            headlineLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            headlineMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            headlineSmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            titleLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            titleMedium: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            titleSmall: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            bodyLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            bodyMedium: GoogleFonts.inter(color: AppColors.textSecondaryDark),
+            bodySmall: GoogleFonts.inter(color: AppColors.textSecondaryDark),
+            labelLarge: GoogleFonts.inter(color: AppColors.textPrimaryDark),
+            labelMedium: GoogleFonts.inter(color: AppColors.textSecondaryDark),
+            labelSmall: GoogleFonts.inter(color: AppColors.textSecondaryDark),
+          ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.surfaceDark,
         foregroundColor: AppColors.textPrimaryDark,
@@ -160,13 +159,11 @@ class AppTheme {
           color: AppColors.textPrimaryDark,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.cardDark,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -212,7 +209,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.primaryLight, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surfaceDark,
@@ -221,10 +221,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      dividerTheme: DividerThemeData(
-        color: Colors.grey.shade800,
-        thickness: 1,
-      ),
+      dividerTheme: DividerThemeData(color: Colors.grey.shade800, thickness: 1),
     );
   }
 }
