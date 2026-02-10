@@ -406,23 +406,26 @@ def simulate_trend(base_risk: int, weeks: int = 8) -> List[Dict[str, Any]]:
 def what_if_simulation(
     student: Student,
     fix_attendance: bool = False,
-    fix_workload: bool = False
+    fix_workload: bool = False,
+    attendance_target: float = None,
+    workload_target: int = None,
+    late_subs_target: int = None,
+    missed_subs_target: int = None
 ) -> Dict[str, Any]:
     """
     Simulate the impact of interventions on student's risk score.
+    
+    Now supports "Masterful" granular targets:
+    - attendance_target: Specific % to simulate
+    - workload_target: Specific task count to simulate
+    - late_subs_target: Specific late count to simulate
+    - missed_subs_target: Specific missed count to simulate
     
     This is a PURE FUNCTION that:
     - Takes the current student state
     - Creates a hypothetical modified copy
     - Recomputes the risk score
     - Returns a detailed explanation of what changed
-    
-    Shows predicted risk reduction if:
-    - fix_attendance: Attendance improves to 90% (removes attendance-based flags)
-    - fix_workload: Workload reduces to baseline 10 tasks (removes workload spike)
-    
-    Returns:
-        Dict with original risk, new risk, reduction, and natural language explanation
     """
     
     # ═══════════════════════════════════════════════════════════════════════
@@ -432,12 +435,17 @@ def what_if_simulation(
     
     # ═══════════════════════════════════════════════════════════════════════
     # STEP 2: Create hypothetical student copy with improvements
-    # IMPORTANT: We NEVER modify the original student object
     # ═══════════════════════════════════════════════════════════════════════
-    modified_attendance = 90.0 if fix_attendance else student.attendance_rate
-    modified_workload = 10 if fix_workload else student.workload_tasks
-    # If attendance is fixed, also fix previous_attendance to avoid "sudden drop" trigger
-    modified_prev_attendance = modified_attendance if fix_attendance else student.previous_attendance
+    
+    # Determine hypothetical values (Target overrides binary fix)
+    hypo_attendance = attendance_target if attendance_target is not None else (90.0 if fix_attendance else student.attendance_rate)
+    hypo_workload = workload_target if workload_target is not None else (10 if fix_workload else student.workload_tasks)
+    hypo_late = late_subs_target if late_subs_target is not None else student.late_submissions
+    hypo_missed = missed_subs_target if missed_subs_target is not None else student.missed_submissions
+    
+    # For behavior change detection (Rule 5), we assume stability in the hypothetical future
+    # IF the user is actively simulating an attendance change.
+    hypo_prev_attendance = hypo_attendance if (attendance_target is not None or fix_attendance) else student.previous_attendance
     
     # Create a NEW Student object (original is untouched)
     modified_student = Student(
@@ -446,11 +454,11 @@ def what_if_simulation(
         email=student.email,
         department=student.department,
         year=student.year,
-        attendance_rate=modified_attendance,
-        late_submissions=student.late_submissions,
-        missed_submissions=student.missed_submissions,
-        workload_tasks=modified_workload,
-        previous_attendance=modified_prev_attendance,
+        attendance_rate=hypo_attendance,
+        late_submissions=hypo_late,
+        missed_submissions=hypo_missed,
+        workload_tasks=hypo_workload,
+        previous_attendance=hypo_prev_attendance,
         previous_workload=student.previous_workload
     )
     
@@ -463,83 +471,52 @@ def what_if_simulation(
     # STEP 4: Generate detailed natural language explanation
     # ═══════════════════════════════════════════════════════════════════════
     explanations = []
-    removed_rules = []
     
-    # Identify which rules were REMOVED by the intervention
+    # Identify which rules were REMOVED or ADDED by the intervention
     original_rule_set = set(original_reasons)
     new_rule_set = set(new_reasons)
     removed_rules = original_rule_set - new_rule_set
+    added_rules = new_rule_set - original_rule_set
     
-    # Build natural language explanations
-    if fix_attendance:
-        if student.attendance_rate < 75:
-            explanations.append(
-                f"✓ Improving attendance from {student.attendance_rate}% to 90% removes the 'low attendance' flag (-20 points)"
-            )
-        if student.previous_attendance - student.attendance_rate > 20:
-            explanations.append(
-                f"✓ Stable attendance removes the 'sudden behavior change' flag (-15 points)"
-            )
-        if not any("attendance" in r.lower() for r in original_reasons) and fix_attendance:
-            explanations.append(
-                f"✓ Attendance is already good. Improving to 90% maintains healthy status."
-            )
+    # Explain REMOVALS
+    for rule in removed_rules:
+        explanations.append(f"✓ Removed: {rule}")
     
-    if fix_workload:
-        workload_increase = 0
-        if student.previous_workload > 0:
-            workload_increase = ((student.workload_tasks - student.previous_workload) 
-                                / student.previous_workload) * 100
-        if workload_increase > 40:
-            explanations.append(
-                f"✓ Reducing workload from {student.workload_tasks} to 10 tasks removes the 'workload spike' flag (-15 points)"
-            )
-        elif student.workload_tasks > 10 and fix_workload:
-            explanations.append(
-                f"✓ Workload reduced from {student.workload_tasks} to 10 tasks. No active workload flag to remove."
-            )
+    # Explain ADDS (if user makes settings WORSE in the lab)
+    for rule in added_rules:
+        explanations.append(f"⚠ Triggered: {rule}")
     
-    # If no changes were made or no impact
+    # Fallback if no rules changed but values did
     if not explanations:
-        if not fix_attendance and not fix_workload:
-            explanations.append("No interventions selected. Try adjusting attendance or workload.")
+        if hypo_attendance != student.attendance_rate or hypo_workload != student.workload_tasks:
+            explanations.append("Metrics adjusted, but risk level remains stable at current boundaries.")
         else:
-            explanations.append("The selected interventions don't remove any active risk flags for this student.")
+            explanations.append("No changes simulated. Adjust sliders to see impact.")
     
     # Calculate reduction
     reduction = original_score - new_score
     
-    # Build summary message for judges
+    # Build summary message
     if reduction > 0:
-        summary = f"Early intervention reduces risk by {reduction} points ({get_risk_level(original_score)} → {get_risk_level(new_score)})"
-    elif reduction == 0:
-        summary = "No risk change from these interventions. Try different parameters or check other risk factors."
+        summary = f"Intervention reduces risk by {reduction} points."
+    elif reduction < 0:
+        summary = f"Risk increased by {abs(reduction)} points due to simulated settings."
     else:
-        summary = "Unexpected result. Please check the simulation parameters."
+        summary = "No immediate risk change detected at these metric levels."
     
     return {
-        # Core metrics
         "originalRisk": original_score,
         "originalLevel": get_risk_level(original_score),
         "newRisk": new_score,
         "newLevel": get_risk_level(new_score),
         "riskReduction": reduction,
         "reductionPercent": round((reduction / original_score * 100) if original_score > 0 else 0, 1),
-        
-        # Natural language explanations
         "explanation": " | ".join(explanations),
         "summary": summary,
-        
-        # Rule changes for debugging/transparency
-        "originalRulesTriggered": list(original_reasons),
-        "newRulesTriggered": list(new_reasons),
-        "rulesRemoved": list(removed_rules),
-        
-        # What was changed
         "interventions": {
-            "fixedAttendance": fix_attendance,
-            "fixedWorkload": fix_workload,
-            "attendanceChange": f"{student.attendance_rate}% → 90%" if fix_attendance else None,
-            "workloadChange": f"{student.workload_tasks} → 10 tasks" if fix_workload else None
+            "attendance": hypo_attendance,
+            "workload": hypo_workload,
+            "lateSubmissions": hypo_late,
+            "missedSubmissions": hypo_missed
         }
     }

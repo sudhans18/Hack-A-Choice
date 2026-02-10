@@ -22,6 +22,7 @@ import {
 
 import Navbar from '../components/Navbar';
 import LoadingScreen from '../components/LoadingScreen';
+import WhatIfSimulator from '../components/WhatIfSimulator';
 import { getStudentAnalytics } from '../services/api';
 import './StudentDetail.css';
 
@@ -276,6 +277,21 @@ const StudentDetail = () => {
                         </div>
                     </div>
                 </section>
+
+                {/* What-If Simulator */}
+                <WhatIfSimulator
+                    studentId={student.studentId}
+                    originalScore={student.finalRiskScore}
+                    originalLevel={student.finalRiskLevel}
+                    initialData={{
+                        attendance: student.attendance_rate || 75,
+                        workloadTasks: student.study_load || 10,
+                        lateSubmissions: student.lateSubmissions || 0,
+                        missedSubmissions: student.missedSubmissions || 0,
+                        previousAttendance: student.previous_attendance || 85,
+                        previousWorkload: student.previous_workload || 8
+                    }}
+                />
 
                 {/* Active Indicators */}
                 {student.ruleTriggers && student.ruleTriggers.length > 0 && (

@@ -106,6 +106,12 @@ class WhatIfRequest(BaseModel):
     student_id: int = Field(..., description="Student ID to simulate")
     fix_attendance: bool = Field(False, description="Simulate fixing attendance to 90%")
     fix_workload: bool = Field(False, description="Simulate reducing workload to baseline")
+    
+    # Granular targets for "Masterful" simulation
+    attendance_target: Optional[float] = Field(None, description="Hypothetical attendance rate (0-100)")
+    workload_target: Optional[int] = Field(None, description="Hypothetical weekly task count")
+    late_subs_target: Optional[int] = Field(None, description="Hypothetical late submissions count")
+    missed_subs_target: Optional[int] = Field(None, description="Hypothetical missed submissions count")
 
 
 class WhatIfResponse(BaseModel):
@@ -542,7 +548,11 @@ async def simulate_what_if(request: WhatIfRequest):
     result = what_if_simulation(
         student,
         fix_attendance=request.fix_attendance,
-        fix_workload=request.fix_workload
+        fix_workload=request.fix_workload,
+        attendance_target=request.attendance_target,
+        workload_target=request.workload_target,
+        late_subs_target=request.late_subs_target,
+        missed_subs_target=request.missed_subs_target
     )
     
     return WhatIfResponse(**result)

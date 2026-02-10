@@ -8,8 +8,6 @@
 
 Educational institutions typically detect student stress only after academic performance declines. **COGNIS** proposes a proactive solution that analyzes real-time academic behavior—like attendance drops and submission delays—to calculate an explainable **Stress Risk Score (0-100)**.
 
-This project was built for a 24-hour hackathon, focusing on interpretability, speed, and cross-platform accessibility.
-
 ---
 
 ## 🏗️ Project Architecture
@@ -31,12 +29,17 @@ graph TD
 
 ---
 
-## 🛠️ Tech Stack
+### 🛠️ Key Features
 
--   **Backend**: Python, FastAPI, Uvicorn, Pydantic
--   **Frontend Dashboard**: React, Chart.js, Vanilla CSS (Modern UI)
--   **Mobile App**: Flutter, Dart, Provider
--   **Design Philosophy**: Premium glassmorphism, high-contrast dark modes, and micro-animations.
+- **Predictive Intelligence Lab (What-If Simulator)**: High-fidelity simulation environment with granular range sliders for:
+    - Attendance Rate (%)
+    - Weekly Workload (Tasks)
+    - Late & Missed Submissions
+- **Liquid-Smooth Feedback**: Zero-latency Risk Meter and Gauge that react instantly to student metric adjustments.
+- **Explainable Rule Fusion**: Real-time natural language explanations for every rule triggered or removed (e.g., "✓ Removed: Attendance below 75%").
+- **Admin Dashboard**: Real-time risk heatmaps, student analytics, and intervention tracking.
+- **ML + Rule Fusion**: Combines pre-trained ML models with a robust, domain-expert rule engine for high precision.
+- **Stress Trend Visualization**: 8-week history tracking using interactive line charts.
 
 ---
 
@@ -52,7 +55,7 @@ graph TD
 # Navigate to root
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install fastapi uvicorn pydantic
+pip install -r app/requirements.txt
 python app/main.py
 ```
 *API docs available at: `http://localhost:8000/docs`*
@@ -73,16 +76,6 @@ flutter run
 
 ---
 
-## ✨ Features
-
--   **Explainable Risk Scoring**: Rules tell you *why* a student is stressed (e.g., "Attendance drop > 20%").
--   **What-if Simulator**: Faculty can simulate how fixing attendance or workload would reduce a student's risk.
--   **Live Data Ingestion**: Endpoints for real-time simulation of assignment submissions and attendance logs.
--   **Personalized Recommendations**: Students get actionable advice based on their specific risk triggers.
--   **Stress Trend Visualization**: 8-week history tracking using interactive line charts.
-
----
-
 ## 👥 Contributors
 
 This project was built with ❤️ by:
@@ -96,4 +89,4 @@ This project was built with ❤️ by:
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.

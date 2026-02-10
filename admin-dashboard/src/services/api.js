@@ -162,3 +162,28 @@ export const getDashboardStats = async () => {
         throw error;
     }
 };
+/**
+ * POST /simulate/what-if
+ * Simulates the impact of interventions on a student's risk score.
+ * 
+ * @param {string|number} studentId - The student's unique ID
+ * @param {Object} interventions - { fix_attendance: boolean, fix_workload: boolean }
+ * @returns {Promise<Object>} Simulation results
+ */
+export const simulateWhatIf = async (studentId, interventions) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/simulate/what-if`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                student_id: parseInt(studentId),
+                ...interventions
+            })
+        });
+        if (!response.ok) throw new Error('Simulation failed');
+        return await response.json();
+    } catch (error) {
+        console.error('Simulation API Error:', error);
+        throw error;
+    }
+};
