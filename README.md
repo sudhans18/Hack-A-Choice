@@ -1,4 +1,4 @@
-# Hack-A-Choice: Academic Stress Early Warning System
+# COGNIS: Academic Stress Early Warning System
 
 > **Detecting burnout before it happens.** A rule-based early warning system that monitors behavioral academic signals to flag student stress risk early.
 
@@ -6,7 +6,7 @@
 
 ## 🌟 Overview
 
-Educational institutions typically detect student stress only after academic performance declines. **Hack-A-Choice** proposes a proactive solution that analyzes real-time academic behavior—like attendance drops and submission delays—to calculate an explainable **Stress Risk Score (0-100)**.
+Educational institutions typically detect student stress only after academic performance declines. **COGNIS** proposes a proactive solution that analyzes real-time academic behavior—like attendance drops and submission delays—to calculate an explainable **Stress Risk Score (0-100)**.
 
 This project was built for a 24-hour hackathon, focusing on interpretability, speed, and cross-platform accessibility.
 
@@ -89,7 +89,7 @@ This project was built with ❤️ by:
 
 | Name | GitHub | LinkedIn |
 | :--- | :--- | :--- |
-| **Rohith Kanna S** | [GitHub Profile](https://github.com/rohithkanna) | [LinkedIn](https://www.linkedin.com/in/rohith4510/) |
+| **Rohith Kanna S** | [Rohithkannas](https://github.com/Rohithkannas) | [LinkedIn](https://www.linkedin.com/in/rohith4510/) |
 | **Sudhan S** | [sudhans18](https://github.com/sudhans18) | [LinkedIn](https://www.linkedin.com/in/sudhan18/) |
 
 ---
